@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 @Service
 public class MovieService {
@@ -68,5 +69,95 @@ public class MovieService {
             return Optional.empty();
         }
         return Optional.ofNullable(movieMap.get(id));
+    }
+
+    /**
+     * Ahoy matey! Search for movies in our treasure chest using various criteria.
+     * This method be the main search crew member that coordinates all search operations.
+     * 
+     * @param name Movie name to search for (case-insensitive, partial matches allowed)
+     * @param id Movie ID to search for
+     * @param genre Movie genre to search for (case-insensitive, partial matches allowed)
+     * @return List of movies matching the search criteria, or empty list if no treasure be found
+     */
+    public List<Movie> searchMovies(String name, Long id, String genre) {
+        logger.info("Arrr! Starting treasure hunt with search criteria - name: '{}', id: {}, genre: '{}'", 
+                   name, id, genre);
+        
+        List<Movie> searchResults = new ArrayList<>(movies);
+        
+        // Filter by movie ID if provided - this be the most specific search, matey!
+        if (id != null && id > 0) {
+            logger.debug("Searching by movie ID: {}", id);
+            Optional<Movie> movieById = getMovieById(id);
+            searchResults = movieById.map(List::of).orElse(new ArrayList<>());
+        }
+        
+        // Filter by movie name if provided - case-insensitive partial match, arrr!
+        if (name != null && !name.trim().isEmpty()) {
+            String searchName = name.trim().toLowerCase();
+            logger.debug("Filtering by movie name containing: '{}'", searchName);
+            searchResults = searchResults.stream()
+                    .filter(movie -> movie.getMovieName().toLowerCase().contains(searchName))
+                    .collect(Collectors.toList());
+        }
+        
+        // Filter by genre if provided - case-insensitive partial match, ye scurvy dog!
+        if (genre != null && !genre.trim().isEmpty()) {
+            String searchGenre = genre.trim().toLowerCase();
+            logger.debug("Filtering by genre containing: '{}'", searchGenre);
+            searchResults = searchResults.stream()
+                    .filter(movie -> movie.getGenre().toLowerCase().contains(searchGenre))
+                    .collect(Collectors.toList());
+        }
+        
+        logger.info("Treasure hunt complete! Found {} movies matching the search criteria", searchResults.size());
+        return searchResults;
+    }
+
+    /**
+     * Search movies by name only - a specialized crew member for name-based treasure hunting!
+     * 
+     * @param name Movie name to search for (case-insensitive, partial matches allowed)
+     * @return List of movies with names containing the search term
+     */
+    public List<Movie> searchMoviesByName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            logger.warn("Arrr! Empty search name provided, returning empty treasure chest");
+            return new ArrayList<>();
+        }
+        
+        String searchName = name.trim().toLowerCase();
+        logger.info("Searching for movies with name containing: '{}'", searchName);
+        
+        List<Movie> results = movies.stream()
+                .filter(movie -> movie.getMovieName().toLowerCase().contains(searchName))
+                .collect(Collectors.toList());
+                
+        logger.info("Found {} movies with name matching '{}'", results.size(), searchName);
+        return results;
+    }
+
+    /**
+     * Search movies by genre only - another specialized crew member for genre-based treasure hunting!
+     * 
+     * @param genre Movie genre to search for (case-insensitive, partial matches allowed)
+     * @return List of movies with genres containing the search term
+     */
+    public List<Movie> searchMoviesByGenre(String genre) {
+        if (genre == null || genre.trim().isEmpty()) {
+            logger.warn("Arrr! Empty search genre provided, returning empty treasure chest");
+            return new ArrayList<>();
+        }
+        
+        String searchGenre = genre.trim().toLowerCase();
+        logger.info("Searching for movies with genre containing: '{}'", searchGenre);
+        
+        List<Movie> results = movies.stream()
+                .filter(movie -> movie.getGenre().toLowerCase().contains(searchGenre))
+                .collect(Collectors.toList());
+                
+        logger.info("Found {} movies with genre matching '{}'", results.size(), searchGenre);
+        return results;
     }
 }
